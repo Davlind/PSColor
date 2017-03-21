@@ -40,6 +40,12 @@ $global:PSColor = @{
         LineNumber = @{ Color = 'Yellow' }
         Line       = @{ Color = 'White' }
     }
+	NoMatch = @{
+        Default    = @{ Color = 'White' }
+        Path       = @{ Color = 'Cyan'}
+        LineNumber = @{ Color = 'Yellow' }
+        Line       = @{ Color = 'White' }
+    }
 }
 ```
 

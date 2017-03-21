@@ -36,11 +36,11 @@ function Write-Color-LS
 function FileInfo {
     param (
         [Parameter(Mandatory=$True,Position=1)]
-        $file
+        [System.IO.FileSystemInfo] $file
     )
 
     $regex_opts = ([System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
-
+	
     $hidden = New-Object System.Text.RegularExpressions.Regex(
         $global:PSColor.File.Hidden.Pattern, $regex_opts)
     $code = New-Object System.Text.RegularExpressions.Regex(
@@ -52,14 +52,21 @@ function FileInfo {
     $compressed = New-Object System.Text.RegularExpressions.Regex(
         $global:PSColor.File.Compressed.Pattern, $regex_opts)
 
-    if($script:showHeader)
+	if ($file -is [System.IO.DirectoryInfo])
+	{
+	    $currentdir = $file.Parent.FullName
+	} else 
+	{
+		$currentdir = $file.DirectoryName
+	}
+    if($script:directory -ne $currentdir)
     {
+	   $script:directory = $currentdir
        Write-Host
-       Write-Host "    Directory: " -noNewLine
-       Write-Host " $(pwd)`n" -foregroundcolor "Green"
+       Write-Host "    Directory: " -noNewLine	   
+       Write-Host " $currentdir`n" -foregroundcolor "Green"
        Write-Host "Mode                LastWriteTime     Length Name"
        Write-Host "----                -------------     ------ ----"
-       $script:showHeader=$false
     }
 
     if ($hidden.IsMatch($file.Name))

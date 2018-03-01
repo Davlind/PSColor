@@ -7,8 +7,6 @@ Add-Type -assemblyname System.ServiceProcess
 . "$PSScriptRoot\MatchInfo.ps1"
 . "$PSScriptRoot\ProcessInfo.ps1"
 
-
-
 $global:PSColor = @{
     File = @{
         Default    = @{ Color = 'White' }
@@ -34,28 +32,78 @@ $global:PSColor = @{
 
 $script:showHeader=$true
 
-New-CommandWrapper Out-Default -Process {
+function Out-Default {
+    [CmdletBinding(HelpUri='http://go.microsoft.com/fwlink/?LinkID=113362', RemotingCapability='None')]
+    param(
+        [switch]
+        ${Transcript},
 
-    if(($_ -is [System.IO.DirectoryInfo]) -or ($_ -is [System.IO.FileInfo]))
+        [Parameter(Position=0, ValueFromPipeline=$true)]
+        [psobject]
+        ${InputObject})
+
+    begin
     {
-        FileInfo $_
-        $_ = $null
+        try {
+            $outBuffer = $null
+            if ($PSBoundParameters.TryGetValue('OutBuffer', [ref]$outBuffer))
+            {
+                $PSBoundParameters['OutBuffer'] = 1
+            }
+            $wrappedCmd = $ExecutionContext.InvokeCommand.GetCommand('Microsoft.PowerShell.Core\Out-Default', [System.Management.Automation.CommandTypes]::Cmdlet)
+            $scriptCmd = {& $wrappedCmd @PSBoundParameters }
+
+            $steppablePipeline = $scriptCmd.GetSteppablePipeline()
+            $steppablePipeline.Begin($PSCmdlet)
+        } catch {
+            throw
+        }
     }
 
-    elseif($_ -is [System.ServiceProcess.ServiceController])
+    process
     {
-        ServiceController $_
-        $_ = $null
+        try {
+            if(($_ -is [System.IO.DirectoryInfo]) -or ($_ -is [System.IO.FileInfo]))
+            {
+                FileInfo $_
+                $_ = $null
+            }
+
+            elseif($_ -is [System.ServiceProcess.ServiceController])
+            {
+                ServiceController $_
+                $_ = $null
+            }
+
+            elseif($_ -is [Microsoft.Powershell.Commands.MatchInfo])
+            {
+                MatchInfo $_
+                $_ = $null
+            }
+            else {
+                $steppablePipeline.Process($_)
+            }
+        } catch {
+            throw
+        }
     }
 
-    elseif($_ -is [Microsoft.Powershell.Commands.MatchInfo])
+    end
     {
-        MatchInfo $_
-        $_ = $null
+        try {
+            write-host ""
+            $script:showHeader=$true
+            $steppablePipeline.End()
+        } catch {
+            throw
+        }
     }
-} -end {
-    write-host ""
-    $script:showHeader=$true
+    <#
+
+    .ForwardHelpTargetName Out-Default
+    .ForwardHelpCategory Function
+
+    #>
 }
 
-Export-ModuleMember
+Export-ModuleMember Out-Default

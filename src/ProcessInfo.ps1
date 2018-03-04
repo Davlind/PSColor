@@ -6,18 +6,17 @@ function Write-Color-Process
 }
 
 function ProcessInfo {
-        param (
-        [Parameter(Mandatory=$True,Position=1)]
-        $process
+    param (
+        [Parameter(Mandatory=$True,Position=1)] $process
     )
 
-    if($script:showHeader)
-    {
-        Write-Host        
+    if ($script:showHeader) {
+        Write-Host
         Write-Host 'Handles  NPM(K)    PM(K)      WS(K) VM(M)   CPU(s)     Id ProcessName'
         Write-Host '-------  ------    -----      ----- -----   ------     -- -----------'
         $script:showHeader=$false
     }
+
     $id = $_.Id
     $owner = (Get-WmiObject -Class Win32_Process -Filter "ProcessId = $id").getowner()
 
@@ -26,6 +25,5 @@ function ProcessInfo {
         [math]::Round($_.PagedMemorySize / 1KB),
         $owner.domain,
         $owner.user
-
-        )
+    )
 }
